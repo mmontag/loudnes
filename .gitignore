@@ -21,3 +21,6 @@ gui/*
 
 Icon?
 .DS_Stor*
+/LoudNES/cmake-build-debug/
+/LoudNES/resources/dmc/
+/LoudNES/resources/fonts/*.ttf

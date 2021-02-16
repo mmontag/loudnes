@@ -50,3 +50,7 @@
 #define APP_SIGNAL_VECTOR_SIZE 64
 
 #define ROBOTO_FN "Roboto-Regular.ttf"
+#define NORMAL_FN "Inter-Regular.ttf"
+#define BOLD_FN "Inter-Bold.ttf"
+#define UNIVERS_FN "UniversBlackExt.ttf"
+#define PLUG_PADDING 20
