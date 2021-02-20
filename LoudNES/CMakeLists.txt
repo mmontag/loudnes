@@ -1,7 +1,7 @@
 # Note: Not a full-functioning CMake project. Just used to enable CLion project awareness.
 
 cmake_minimum_required(VERSION 3.10)
-project(ChipSmasher)
+project(LoudNES)
 
 set(CMAKE_CXX_STANDARD 14)
 
