@@ -20,7 +20,7 @@ include_directories(../iPlug2/WDL)
 
 add_definitions(-DIPLUG_EDITOR -DIPLUG_DSP -DAPP_API)
 
-add_executable(ChipSmasher
+add_executable(LoudNES
         NesSndEmu/boost/config.hpp
         NesSndEmu/boost/cstdint.hpp
         NesSndEmu/boost/static_assert.hpp
