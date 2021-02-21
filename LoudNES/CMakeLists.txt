@@ -71,4 +71,5 @@ add_executable(LoudNES
         NesEnvelope.h
         NesVoice.h
         StepSequencer.h
-        KnobControl.h)
+        KnobControl.h
+        ChannelSwitchControl.h)
