@@ -54,3 +54,8 @@
 #define BOLD_FN "Inter-Bold.ttf"
 #define UNIVERS_FN "UniversBlackExt.ttf"
 #define PLUG_PADDING 20
+
+#define SWITCH_ON_FN "switch-on.svg"
+#define SWITCH_OFF_FN "switch-off.svg"
+#define CHANNEL_ON_FN "channel-on.svg"
+#define CHANNEL_OFF_FN "channel-off.svg"

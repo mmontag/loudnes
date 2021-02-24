@@ -67,7 +67,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
         DEFAULT_X3COLOR  // Extra 3
       }, // Colors
       IText(11.f, DEFAULT_TEXT_FGCOLOR, "Univers", EAlign::Near, EVAlign::Middle), // Label text
-      IText(15.f, DEFAULT_TEXT_FGCOLOR, "Normal", EAlign::Center, EVAlign::Middle),
+      IText(15.f, DEFAULT_TEXT_FGCOLOR, "Normal", EAlign::Center, EVAlign::Middle), // Value text
       false, // Hide mouse
       true,  // Show frame
       false, // Show shadows
@@ -104,6 +104,10 @@ LoudNES::LoudNES(const InstanceInfo& info)
     pGraphics->LoadFont("Univers", UNIVERS_FN);
     pGraphics->LoadFont("Normal", NORMAL_FN);
     pGraphics->LoadFont("Bold", BOLD_FN);
+    const ISVG switchOnSvg = pGraphics->LoadSVG(SWITCH_ON_FN);
+    const ISVG switchOffSvg = pGraphics->LoadSVG(SWITCH_OFF_FN);
+    const ISVG channelOnSvg = pGraphics->LoadSVG(CHANNEL_ON_FN);
+    const ISVG channelOffSvg = pGraphics->LoadSVG(CHANNEL_OFF_FN);
     pGraphics->EnableTooltips(true);
 
     IRECT b = pGraphics->GetBounds();
