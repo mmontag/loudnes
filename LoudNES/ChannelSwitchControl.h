@@ -132,23 +132,10 @@ void ChannelSwitchControl::Draw(IGraphics& g)
 
 void ChannelSwitchControl::DrawButton(IGraphics& g, const IRECT& r, bool pressed, bool mouseOver, ETabSegment segment, bool disabled)
 {
-  switch (mShape)
-  {
-    case EVShape::EndsRounded:
-      if(mDirection == EDirection::Horizontal)
-        DrawPressableRectangle(g, r, pressed, mouseOver, disabled, segment == ETabSegment::Start, segment == ETabSegment::End, false, false);
-      else
-        DrawPressableRectangle(g, r, pressed, mouseOver, false, disabled, segment == ETabSegment::Start, false, segment == ETabSegment::End);
-      break;
-    case EVShape::AllRounded:
-      if(mDirection == EDirection::Horizontal)
-        DrawPressableRectangle(g, r, pressed, mouseOver, disabled, true, true, false, false);
-      else
-        DrawPressableRectangle(g, r, pressed, mouseOver, disabled, false, true, false, true);
-      break;
-    default:
-      DrawPressableShape(g, mShape, r, pressed, mouseOver, disabled);
-      break;
+  DrawPressableShape(g, mShape, r, pressed, mouseOver, disabled);
+  if (pressed) {
+    EVColor color = mouseOver ? kHL : kPR;
+    g.FillTriangle(GetColor(color), r.R - 0.1, r.B, r.R - 0.1, r.T, r.R + 9.f, r.MH());
   }
 }
 
@@ -167,7 +154,7 @@ void ChannelSwitchControl::DrawWidget(IGraphics& g)
     if(i == mNumStates-1)
       segment = ETabSegment::End;
 
-    DrawButton(g, r.GetPadded(0, -1, 0, -1), i == selected, mMouseOverButton == i, segment, IsDisabled() || GetStateDisabled(i));
+    DrawButton(g, r.GetPadded(0, -1.f, -9.f, -1.f), i == selected, mMouseOverButton == i, segment, IsDisabled() || GetStateDisabled(i));
 
     if(mTabLabels.Get(i))
     {
