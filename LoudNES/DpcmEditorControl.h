@@ -68,7 +68,7 @@ public:
     };
     GetUI()->AttachControl(new IVButtonControl(box,
                                                menuFunc,
-                                               "[ Choose Sample ]",
+                                               "Assign Sample",
                                                mStyle),
                            kNoTag, "DpcmEditor");
     box.Translate(0, box.H() + bMargin);
@@ -76,7 +76,7 @@ public:
     // Add Sample Button
     GetUI()->AttachControl(new IVButtonControl(box,
                                                [&](IControl *control) { OnAddSampleClick(); },
-                                               "Add Sample...",
+                                               "Import Sample...",
                                                mStyle), kNoTag, "DpcmEditor");
     box.Translate(0, box.H() + bMargin);
     box.B += 16;
