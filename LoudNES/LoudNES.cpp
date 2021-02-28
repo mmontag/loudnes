@@ -238,19 +238,35 @@ LoudNES::LoudNES(const InstanceInfo& info)
       channelButtonRect.Translate(0, channelButtonRect.H());
     }
 
-    auto keyTrackButton = new IVToggleControl(channelButtonRect, ParamFromCh(0, kParamChKeyTrack), "Key Track", style);
-    pGraphics->AttachControl(keyTrackButton, kCtrlTagKeyTrack, "NES");
-    channelButtonRect.Translate(0, channelButtonRect.H());
 
-    auto velSensButton = new IVToggleControl(channelButtonRect, ParamFromCh(0, kParamChVelSens), "Vel Sens", style);
-    pGraphics->AttachControl(velSensButton, kCtrlTagVelSens, "NES");
-    channelButtonRect.Translate(0, channelButtonRect.H());
+#pragma mark - Keyboard Controls
 
-    auto legatoButton = new IVToggleControl(channelButtonRect, ParamFromCh(0, kParamChLegato), "Legato", style);
-    pGraphics->AttachControl(legatoButton, kCtrlTagLegato, "NES");
-    channelButtonRect.Translate(0, channelButtonRect.H());
+    const float kToggleSwitchWidth = 26;
+    const float kToggleSwitchHeight = 20;
 
-    auto omniButton = new IVToggleControl(channelButtonRect, kParamOmniMode, "Omni Mode", style);
+    IVStyle keyboardControlLabelStyle = style.WithValueText(style.valueText.WithAlign(EAlign::Near)).WithDrawFrame(false);
+    channelButtonRect.B = channelButtonRect.T + kToggleSwitchHeight;
+
+    channelButtonRect.Translate(0, channelButtonRect.H()); // Vertical space
+
+    auto keyboardParamTuples = vector<tuple<EControlTags, EChParams, string>>{
+      {kCtrlTagKeyTrack, kParamChKeyTrack, "Key Track"},
+      {kCtrlTagVelSens, kParamChVelSens, "Velocity Sens"},
+      {kCtrlTagLegato, kParamChLegato, "Legato"}
+    };
+
+    for (auto keyboardParamTuple : keyboardParamTuples) {
+      auto labelControl = new IVLabelControl(channelButtonRect.GetReducedFromRight(kToggleSwitchWidth), get<string>(keyboardParamTuple).c_str(), keyboardControlLabelStyle);
+      pGraphics->AttachControl(labelControl);
+      auto switchControl = new ISVGSwitchControl(channelButtonRect.GetFromRight(kToggleSwitchWidth), { switchOffSvg, switchOnSvg }, ParamFromCh(0, get<EChParams>(keyboardParamTuple)));
+      pGraphics->AttachControl(switchControl, get<EControlTags>(keyboardParamTuple));
+      channelButtonRect.Translate(0, channelButtonRect.H());
+    }
+
+    channelButtonRect.Translate(0, channelButtonRect.H()); // Vertical space
+
+    pGraphics->AttachControl(new IVLabelControl(channelButtonRect.GetReducedFromRight(kToggleSwitchWidth), "Omni Mode", keyboardControlLabelStyle));
+    auto omniButton = new ISVGSwitchControl(channelButtonRect.GetFromRight(kToggleSwitchWidth), { switchOffSvg, switchOnSvg }, kParamOmniMode);
     omniButton->SetTooltip("When Omni Mode is on, all NES channels receive events from all MIDI channels. "
                            "When Omni Mode is off, each MIDI channel is mapped to a different NES channel. \n"
                            "If your plugin host doesn't support multichannel plugins, "
@@ -258,6 +274,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
     pGraphics->AttachControl(omniButton, kNoTag, "NES");
     channelButtonRect.Translate(0, channelButtonRect.H());
 
+    channelButtonRect.B = channelButtonRect.T + 40.f;
     pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
       static bool hide = false;
       hide = !hide;
@@ -277,7 +294,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
 
     const int kKnobHeight = 64.f;
 
-    const IRECT editorPanel = b.GetReducedFromLeft(100);
+    const IRECT editorPanel = b.GetReducedFromLeft(136);
 
     auto createEnvelopePanel = [=](IRECT rect, const char* label, float minVal, float maxVal, int envIdx, int baseParam, int ctrlTag, IColor color) {
 
