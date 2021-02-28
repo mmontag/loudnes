@@ -191,7 +191,6 @@ LoudNES::LoudNES(const InstanceInfo& info)
       mDSP.SetActiveChannel(NesApu::Channel(ch));
       UpdateStepSequencers();
       SendCurrentParamValuesFromDelegate();
-//      }, label, style), kNoTag, "NES");
     }, {"PULSE 1", "PULSE 2", "TRIANGLE", "NOISE", "DPCM", "PULSE 3", "PULSE 4", "SAW"},
       nullptr, channelButtonStyle, EVShape::Rectangle, EDirection::Vertical), kNoTag, "NES");
 
@@ -208,33 +207,6 @@ LoudNES::LoudNES(const InstanceInfo& info)
       auto label = get<string>(paramTuple).c_str();
 
       pGraphics->AttachControl(new ISVGSwitchControl(channelButtonRect.GetFromRight(32.f).GetTranslated(-9.f, 0), { channelOffSvg, channelOnSvg }, ParamFromCh(ch, kParamChEnabled)), kNoTag, "NES");
-//      pGraphics->AttachControl(new IVToggleControl(channelButtonRect.GetFromRight(40.f).GetPadded(-4.f), ParamFromCh(ch, kParamChEnabled), label, noLabelStyle), kNoTag, "NES");
-////      pGraphics->AttachControl(new IVButtonControl(channelButtonRect.GetReducedFromRight(40.f), [this, ch](IControl* pCaller){
-//      pGraphics->AttachControl(new IVTabSwitchControl(channelButtonRect.GetReducedFromRight(40.f), [this, ch](IControl* pCaller){
-//        bool isDpcm = ch == NesApu::Channel::Dpcm;
-//        GetUI()->GetControlWithTag(kCtrlTagDpcmEditor)->Hide(!isDpcm);
-//        GetUI()->ForControlInGroup("StepSequencers", [=](IControl& control) {
-//          control.Hide(isDpcm);
-//        });
-//        GetUI()->ForControlInGroup("Knobs", [=](IControl& control) {
-//          control.Hide(isDpcm);
-//        });
-//
-//        // Reassign channel-specific toggles (Key track, Velocity sensitivity, Legato)
-//        GetUI()->GetControlWithTag(kCtrlTagKeyTrack)->SetParamIdx(ParamFromCh(ch, kParamChKeyTrack));
-//        GetUI()->GetControlWithTag(kCtrlTagVelSens)->SetParamIdx(ParamFromCh(ch, kParamChVelSens));
-//        GetUI()->GetControlWithTag(kCtrlTagLegato)->SetParamIdx(ParamFromCh(ch, kParamChLegato));
-//
-//        // Reassign all step sequencer knobs
-//        for (int i = 0; i < 16; i++) {
-//          GetUI()->GetControlWithTag(kCtrlTagKnobs + i)->SetParamIdx(ParamFromCh(ch, kParamEnv1LoopPoint + i));
-//        }
-//
-//        mDSP.SetActiveChannel(ch);
-//        UpdateStepSequencers();
-//        SendCurrentParamValuesFromDelegate();
-////      }, label, style), kNoTag, "NES");
-//      }, {"one", "two"}, label, style, EVShape::Rectangle, EDirection::Vertical), kNoTag, "NES");
       channelButtonRect.Translate(0, channelButtonRect.H());
     }
 
