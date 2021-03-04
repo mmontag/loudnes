@@ -6,6 +6,14 @@
 IPLUG2_ROOT = ../../iPlug2
 #include "../../iPlug2/common-mac.xcconfig"
 
+// Override common-mac.xcconfig for out-of-source build
+// this is used for macOS Developer ID / Appstore code-signing
+CERTIFICATE_ID = Matthew Montag
+DEVELOPMENT_TEAM = GBRA3936J4 // log in to developer.apple.com and see the end of the URL e.g. https://developer.apple.com/account/#/overview/686EDA2T8T
+// Plug-in SDK paths
+VST2_SDK = $(PROJECT_ROOT)/../VST2_SDK
+VST3_SDK = $(PROJECT_ROOT)/../VST3_SDK
+
 //------------------------------
 // Global build settings
 
