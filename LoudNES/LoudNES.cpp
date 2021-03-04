@@ -5,7 +5,6 @@
 #include "KnobControl.h"
 #include "ChannelSwitchControl.h"
 
-
 LoudNES::LoudNES(const InstanceInfo& info)
 : Plugin(info, MakeConfig(kNumParams, kNumPresets))
 {
@@ -256,6 +255,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
       pGraphics->Resize(PLUG_WIDTH, hide ? PLUG_HEIGHT - keyboardBounds.H() - PLUG_PADDING : PLUG_HEIGHT, pGraphics->GetDrawScale());
     }, "Toggle Keyboard", DEFAULT_STYLE.WithColor(kFG, COLOR_WHITE)));
 
+    //TODO(montag): Make each section order-independent (use absolute positioning or positioning constants)
 #pragma mark - Presets
 
     MakeDefaultPreset(nullptr, kNumPresets);
@@ -353,7 +353,7 @@ void LoudNES::OnPresetsModified() {
   UpdateStepSequencers();
   GetUI()->ForControlInGroup("DpcmEditor", [](IControl &control) { control.SetDirty(false); });
 
-  IPluginBase::OnPresetsModified();
+  iplug::IPluginBase::OnPresetsModified();
 }
 
 void LoudNES::UpdateStepSequencerAndParamsFromEnv(int paramEnvLoopPoint, NesEnvelope* env, StepSequencer* seq) {
@@ -476,7 +476,7 @@ bool LoudNES::SerializeState(IByteChunk &chunk) const {
   for (auto channel : mDSP.mNesChannels->allChannels) {
     channel->Serialize(chunk);
   }
-  return IPluginBase::SerializeState(chunk);
+  return iplug::IPluginBase::SerializeState(chunk);
 }
 
 int LoudNES::UnserializeState(const IByteChunk &chunk, int startPos) {
@@ -484,7 +484,7 @@ int LoudNES::UnserializeState(const IByteChunk &chunk, int startPos) {
   for (auto channel : mDSP.mNesChannels->allChannels) {
     pos = channel->Deserialize(chunk, pos);
   }
-  return IPluginBase::UnserializeState(chunk, pos);
+  return iplug::IPluginBase::UnserializeState(chunk, pos);
 }
 
 bool LoudNES::OnMessage(int msgTag, int ctrlTag, int dataSize, const void* pData)
