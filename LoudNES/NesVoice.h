@@ -1,6 +1,6 @@
 //
 //  NesVoice.h
-//  ChipSmasher-macOS
+//  LoudNES-macOS
 //
 //  Created by Matt Montag on 5/20/20.
 //

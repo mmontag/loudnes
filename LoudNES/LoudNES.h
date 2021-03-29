@@ -65,7 +65,7 @@ std::pair<int, int> ResolveParamToChannelParam(int paramIdx) {
 }
 
 #if IPLUG_DSP
-// will use EParams in ChipSmasher_DSP.h
+// will use EParams in LoudNES_DSP.h
 #include "LoudNES_DSP.h"
 #endif
 

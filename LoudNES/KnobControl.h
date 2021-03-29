@@ -2,8 +2,8 @@
 // Created by Matt Montag on 6/26/20.
 //
 
-#ifndef CHIPSMASHER_KNOBCONTROL_H
-#define CHIPSMASHER_KNOBCONTROL_H
+#ifndef LOUDNES_KNOBCONTROL_H
+#define LOUDNES_KNOBCONTROL_H
 
 #include "IControl.h"
 
@@ -188,4 +188,4 @@ protected:
 
 };
 
-#endif //CHIPSMASHER_KNOBCONTROL_H
+#endif //LOUDNES_KNOBCONTROL_H
