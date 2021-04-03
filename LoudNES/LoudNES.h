@@ -11,7 +11,7 @@ const int kEnvelopeSteps = 64;
 //const int kNumEnvParams = 68;
 
 enum EEnvParams {
-  kParamEnvLoopPoint,
+  kParamEnvLoopPoint = 0,
   kParamEnvRelPoint,
   kParamEnvLength,
   kParamEnvSpeedDiv,
@@ -110,7 +110,7 @@ public:
 
   int UnserializeState(const IByteChunk &chunk, int startPos) override;
 
-  int ParamFromCh(int channelNum, int subParam) {
+  static int ParamFromCh(int channelNum, int subParam) {
     return kParamChannelBase + channelNum * kNumChParams + subParam;
   }
 
