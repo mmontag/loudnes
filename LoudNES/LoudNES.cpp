@@ -166,14 +166,14 @@ LoudNES::LoudNES(const InstanceInfo& info)
     IRECT channelPanel = b.GetFromLeft(120);
     IRECT channelButtonRect = channelPanel.GetFromTop(34.f);
 
-    pGraphics->AttachControl(new ChannelSwitchControl(channelPanel.GetFromTop(channelButtonRect.H() * 8), [this](IControl* pCaller){
-      const int ch = static_cast<IVTabSwitchControl*>(pCaller)->GetSelectedIdx();
+    auto handleChannelSwitch = [this](IControl *pCaller) {
+      const int ch = static_cast<IVTabSwitchControl *>(pCaller)->GetSelectedIdx();
       bool isDpcm = ch == NesApu::Channel::Dpcm;
       GetUI()->GetControlWithTag(kCtrlTagDpcmEditor)->Hide(!isDpcm);
-      GetUI()->ForControlInGroup("StepSequencers", [=](IControl& control) {
+      GetUI()->ForControlInGroup("StepSequencers", [=](IControl &control) {
         control.Hide(isDpcm);
       });
-      GetUI()->ForControlInGroup("Knobs", [=](IControl& control) {
+      GetUI()->ForControlInGroup("Knobs", [=](IControl &control) {
         control.Hide(isDpcm);
       });
 
@@ -190,8 +190,13 @@ LoudNES::LoudNES(const InstanceInfo& info)
       mDSP.SetActiveChannel(NesApu::Channel(ch));
       UpdateStepSequencers();
       SendCurrentParamValuesFromDelegate();
-    }, {"PULSE 1", "PULSE 2", "TRIANGLE", "NOISE", "DPCM", "PULSE 3", "PULSE 4", "SAW"},
-      nullptr, channelButtonStyle, EVShape::Rectangle, EDirection::Vertical), kNoTag, "NES");
+    };
+
+    auto ctrl = new ChannelSwitchControl(channelPanel.GetFromTop(channelButtonRect.H() * 8), handleChannelSwitch,
+                                         {"PULSE 1", "PULSE 2", "TRIANGLE", "NOISE", "DPCM", "PULSE 3", "PULSE 4",
+                                          "SAW"}, nullptr, channelButtonStyle, EVShape::Rectangle,
+                                         EDirection::Vertical);
+    pGraphics->AttachControl(ctrl, kNoTag, "NES");
 
     auto paramTuples = vector<tuple<NesApu::Channel, string>>{{NesApu::Channel::Pulse1,     "Pulse 1"},
                                                               {NesApu::Channel::Pulse2,     "Pulse 2"},
@@ -227,9 +232,13 @@ LoudNES::LoudNES(const InstanceInfo& info)
     };
 
     for (auto keyboardParamTuple : keyboardParamTuples) {
-      auto labelControl = new IVLabelControl(channelButtonRect.GetReducedFromRight(kToggleSwitchWidth), get<string>(keyboardParamTuple).c_str(), keyboardControlLabelStyle);
+      auto labelControl = new IVLabelControl(channelButtonRect.GetReducedFromRight(kToggleSwitchWidth),
+                                             get<string>(keyboardParamTuple).c_str(), keyboardControlLabelStyle);
       pGraphics->AttachControl(labelControl);
-      auto switchControl = new ISVGSwitchControl(channelButtonRect.GetFromRight(kToggleSwitchWidth), { switchOffSvg, switchOnSvg }, ParamFromCh(0, get<EChParams>(keyboardParamTuple)));
+
+      auto switchControl = new ISVGSwitchControl(channelButtonRect.GetFromRight(kToggleSwitchWidth),
+                                                 {switchOffSvg, switchOnSvg},
+                                                 ParamFromCh(0, get<EChParams>(keyboardParamTuple)));
       pGraphics->AttachControl(switchControl, get<EControlTags>(keyboardParamTuple));
       channelButtonRect.Translate(0, channelButtonRect.H());
     }
@@ -331,10 +340,15 @@ LoudNES::LoudNES(const InstanceInfo& info)
     };
 
     IRECT envPanel = editorPanel.GetPadded(8);
-    createEnvelopePanel(envPanel.GetGridCell(0, 2, 2).GetPadded(-8), "VOLUME", 0, 15, 0, ParamFromCh(0, kParamEnv1LoopPoint), kCtrlTagEnvelope1, IColor::FromColorCodeStr("#CC2626"));
-    createEnvelopePanel(envPanel.GetGridCell(1, 2, 2).GetPadded(-8), "DUTY", 0, 7, 1, ParamFromCh(1, kParamEnv2LoopPoint), kCtrlTagEnvelope2, IColor::FromColorCodeStr("#DE5E33"));
-    createEnvelopePanel(envPanel.GetGridCell(2, 2, 2).GetPadded(-8), "PITCH", -12, 12, 2, ParamFromCh(2, kParamEnv3LoopPoint), kCtrlTagEnvelope3, IColor::FromColorCodeStr("#53AD8E"));
-    createEnvelopePanel(envPanel.GetGridCell(3, 2, 2).GetPadded(-8), "FINE PITCH", -12, 12, 3, ParamFromCh(3, kParamEnv4LoopPoint), kCtrlTagEnvelope4, IColor::FromColorCodeStr("#747ACD"));
+    // TODO: check if the baseParam argument is correct for these
+    createEnvelopePanel(envPanel.GetGridCell(0, 2, 2).GetPadded(-8), "VOLUME", 0, 15, 0,
+                        ParamFromCh(0, kParamEnv1LoopPoint), kCtrlTagEnvelope1, IColor::FromColorCodeStr("#CC2626"));
+    createEnvelopePanel(envPanel.GetGridCell(1, 2, 2).GetPadded(-8), "DUTY", 0, 7, 1,
+                        ParamFromCh(0, kParamEnv2LoopPoint), kCtrlTagEnvelope2, IColor::FromColorCodeStr("#DE5E33"));
+    createEnvelopePanel(envPanel.GetGridCell(2, 2, 2).GetPadded(-8), "PITCH", -12, 12, 2,
+                        ParamFromCh(0, kParamEnv3LoopPoint), kCtrlTagEnvelope3, IColor::FromColorCodeStr("#53AD8E"));
+    createEnvelopePanel(envPanel.GetGridCell(3, 2, 2).GetPadded(-8), "FINE PITCH", -12, 12, 3,
+                        ParamFromCh(0, kParamEnv4LoopPoint), kCtrlTagEnvelope4, IColor::FromColorCodeStr("#747ACD"));
 
     UpdateStepSequencers();
 
@@ -383,6 +397,8 @@ void LoudNES::UpdateStepSequencers() {
                                         {kCtrlTagEnvelope4, kParamEnv4LoopPoint, mDSP.mNesEnvelope4}}) {
     auto seq = dynamic_cast<StepSequencer *>(GetUI()->GetControlWithTag(seqGroup.ctrlTag));
     auto nesEnv = seqGroup.env;
+
+    // Convert NesEnvelope step value to StepSequencer step value (normalized)
     for (int i = 0; i < 64; i++) {
       seq->SetValue(float(nesEnv->mValues[i] - nesEnv->mMinVal) / float(nesEnv->mMaxVal - nesEnv->mMinVal), i);
     }
