@@ -300,7 +300,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
       // Loop
       auto lpC = new KnobControl(knobBox.SubRectHorizontal(4, 0), loopParam, "Loop", knobStyle, false, false);
       lpC->SetActionFunction([=](IControl *pCaller) {
-        UpdateStepSequencerAndParamsFromEnv(baseParam, mDSP.mNesEnvs[envIdx], stepSeq);
+        UpdateStepSequencerAndParamsFromEnv(envIdx, mDSP.mNesEnvs[envIdx], stepSeq);
         SendCurrentParamValuesFromDelegate();
       });
       pGraphics->AttachControl(lpC, kCtrlTagEnv1LoopPoint + envIdx * 4, "Knobs");
@@ -308,7 +308,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
       // Release
       auto rpC = new KnobControl(knobBox.SubRectHorizontal(4, 1), relParam, "Release", knobStyle, false, false);
       rpC->SetActionFunction([=](IControl *pCaller) {
-        UpdateStepSequencerAndParamsFromEnv(baseParam, mDSP.mNesEnvs[envIdx], stepSeq);
+        UpdateStepSequencerAndParamsFromEnv(envIdx, mDSP.mNesEnvs[envIdx], stepSeq);
         SendCurrentParamValuesFromDelegate();
       });
       pGraphics->AttachControl(rpC, kCtrlTagEnv1RelPoint + envIdx * 4, "Knobs");
@@ -316,7 +316,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
       // Length
       auto lC = new KnobControl(knobBox.SubRectHorizontal(4, 2), lenParam, "Length", knobStyle, false, false);
       lC->SetActionFunction([=](IControl *pCaller) {
-        UpdateStepSequencerAndParamsFromEnv(baseParam, mDSP.mNesEnvs[envIdx], stepSeq);
+        UpdateStepSequencerAndParamsFromEnv(envIdx, mDSP.mNesEnvs[envIdx], stepSeq);
         SendCurrentParamValuesFromDelegate();
       });
       pGraphics->AttachControl(lC, kCtrlTagEnv1Length + envIdx * 4, "Knobs");
@@ -360,7 +360,8 @@ void LoudNES::OnPresetsModified() {
   iplug::IPluginBase::OnPresetsModified();
 }
 
-void LoudNES::UpdateStepSequencerAndParamsFromEnv(int paramEnvLoopPoint, NesEnvelope* env, StepSequencer* seq) {
+void LoudNES::UpdateStepSequencerAndParamsFromEnv(int envIdx, NesEnvelope* env, StepSequencer* seq) {
+  int paramEnvLoopPoint = GetUI()->GetControlWithTag(kCtrlTagEnv1LoopPoint + envIdx * 4)->GetParamIdx(0);
   // Update params
   GetParam(paramEnvLoopPoint + 0)->Set(env->mLoopPoint);
   GetParam(paramEnvLoopPoint + 1)->Set(env->mReleasePoint);
@@ -374,27 +375,25 @@ void LoudNES::UpdateStepSequencerAndParamsFromEnv(int paramEnvLoopPoint, NesEnve
 }
 
 struct SeqGroup {
+  int idx;
   int seqCtrlTag;
-  int loopPointCtrlTag;
-  NesEnvelope* env;
 };
 
 void LoudNES::UpdateStepSequencers() {
   // Update all envelope values
-  for (auto seqGroup : vector<SeqGroup>{{kCtrlTagEnvelope1, kCtrlTagEnv1LoopPoint, mDSP.mNesEnvelope1},
-                                        {kCtrlTagEnvelope2, kCtrlTagEnv2LoopPoint, mDSP.mNesEnvelope2},
-                                        {kCtrlTagEnvelope3, kCtrlTagEnv3LoopPoint, mDSP.mNesEnvelope3},
-                                        {kCtrlTagEnvelope4, kCtrlTagEnv4LoopPoint, mDSP.mNesEnvelope4}}) {
+  for (auto seqGroup : vector<SeqGroup>{{0, kCtrlTagEnvelope1},
+                                        {1, kCtrlTagEnvelope2},
+                                        {2, kCtrlTagEnvelope3},
+                                        {3, kCtrlTagEnvelope4}}) {
     auto seq = static_cast<StepSequencer *>(GetUI()->GetControlWithTag(seqGroup.seqCtrlTag));
-    auto nesEnv = seqGroup.env;
+    auto nesEnv = mDSP.mNesEnvs[seqGroup.idx];
 
     // Convert NesEnvelope step value to StepSequencer step value (normalized)
     for (int i = 0; i < 64; i++) {
       seq->SetValue(float(nesEnv->mValues[i] - nesEnv->mMinVal) / float(nesEnv->mMaxVal - nesEnv->mMinVal), i);
     }
 
-    int loopPointParamIdx = GetUI()->GetControlWithTag(seqGroup.loopPointCtrlTag)->GetParamIdx(0);
-    UpdateStepSequencerAndParamsFromEnv(loopPointParamIdx, nesEnv, seq);
+    UpdateStepSequencerAndParamsFromEnv(seqGroup.idx, nesEnv, seq);
 
     seq->SetActionFunc([nesEnv](int stepIdx, float value) {
       nesEnv->mValues[stepIdx] = round(iplug::Lerp((float)nesEnv->mMinVal, (float)nesEnv->mMaxVal, value));
