@@ -6,7 +6,7 @@
 class StepSequencer;
 
 const int kNumPresets = 8;
-
+const int kNumChannels = 8;
 const int kEnvelopeSteps = 64;
 //const int kNumEnvParams = 68;
 
@@ -19,6 +19,7 @@ enum EEnvParams {
   kNumEnvParams
 };
 
+// Channel params must be used with ParamFromCh.
 enum EChParams {
   kParamChEnabled = 0,
   kParamChKeyTrack,
@@ -52,7 +53,7 @@ enum EParams
   kParamOmniMode,
   kParamChannelBase,
 
-  kNumParams = kParamChannelBase + kNumChParams * 8
+  kNumParams = kParamChannelBase + kNumChParams * kNumChannels
 };
 
 std::pair<int, int> ResolveParamToChannelParam(int paramIdx) {
@@ -77,14 +78,29 @@ enum EControlTags
   kCtrlTagKeyTrack,
   kCtrlTagVelSens,
   kCtrlTagLegato,
-  kCtrlTagEnvelope1,
+  kCtrlTagEnvelope1, // TODO: rename to StepSeq?
   kCtrlTagEnvelope2,
   kCtrlTagEnvelope3,
   kCtrlTagEnvelope4,
   kCtrlTagDpcmEditor,
-  // 16 implicit knob control tags, must be contiguous
-  kCtrlTagKnobs,
-  kNumCtrlTags = kCtrlTagKnobs + 16
+  kCtrlTagEnv1LoopPoint,
+  kCtrlTagEnv1RelPoint,
+  kCtrlTagEnv1Length,
+  kCtrlTagEnv1SpeedDiv,
+  kCtrlTagEnv2LoopPoint,
+  kCtrlTagEnv2RelPoint,
+  kCtrlTagEnv2Length,
+  kCtrlTagEnv2SpeedDiv,
+  kCtrlTagEnv3LoopPoint,
+  kCtrlTagEnv3RelPoint,
+  kCtrlTagEnv3Length,
+  kCtrlTagEnv3SpeedDiv,
+  kCtrlTagEnv4LoopPoint,
+  kCtrlTagEnv4RelPoint,
+  kCtrlTagEnv4Length,
+  kCtrlTagEnv4SpeedDiv,
+
+  kNumCtrlTags
 };
 
 using namespace iplug;
@@ -119,10 +135,6 @@ private:
   // TODO: Figure out why ISender works best with queue size 8
   ISender<1, 8, int> mEnvelopeVisSender;
 
-  StepSequencer* ss1;
-  StepSequencer* ss2;
-  StepSequencer* ss3;
-  StepSequencer* ss4;
 #endif
 
   void UpdateStepSequencers();
