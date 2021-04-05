@@ -44,9 +44,8 @@ LoudNES::LoudNES(const InstanceInfo& info)
 
   mLayoutFunc = [&](IGraphics* pGraphics) {
     pGraphics->AttachCornerResizer(EUIResizerMode::Scale, false);
-//    pGraphics->AttachPanelBackground(COLOR_GRAY);
-    pGraphics->EnableMouseOver(true);
-    pGraphics->EnableMultiTouch(true);
+    pGraphics->EnableMouseOver(false);
+    pGraphics->EnableMultiTouch(false);
 
 #ifdef OS_WEB
     pGraphics->AttachPopupMenuControl();
@@ -267,6 +266,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
     //TODO(montag): Make each section order-independent (use absolute positioning or positioning constants)
 #pragma mark - Presets
 
+    //TODO(montag): Create factory presets
     MakeDefaultPreset(nullptr, kNumPresets);
 
     pGraphics->AttachControl(new IVBakedPresetManagerControl(b.ReduceFromTop(40).GetFromRight(300), style.WithLabelText({15.f, EVAlign::Middle}))); // "./presets", "nesvst"));
