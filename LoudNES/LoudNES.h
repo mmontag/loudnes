@@ -109,7 +109,7 @@ using namespace igraphics;
 class LoudNES final : public Plugin
 {
 public:
-  LoudNES(const InstanceInfo& info);
+  explicit LoudNES(const InstanceInfo& info);
 
 #if IPLUG_DSP // http://bit.ly/2S64BDd
 public:
