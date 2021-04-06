@@ -253,7 +253,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
     pGraphics->AttachControl(omniButton, kNoTag, "NES");
     channelButtonRect.Translate(0, channelButtonRect.H());
 
-    channelButtonRect.B = channelButtonRect.T + 40.f;
+    channelButtonRect.B = channelButtonRect.T + 30.f;
     pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
       static bool hide = false;
       hide = !hide;
@@ -261,13 +261,48 @@ LoudNES::LoudNES(const InstanceInfo& info)
       pGraphics->GetControlWithTag(kCtrlTagBender)->Hide(hide);
       pGraphics->GetControlWithTag(kCtrlTagModWheel)->Hide(hide);
       pGraphics->Resize(PLUG_WIDTH, hide ? PLUG_HEIGHT - keyboardBounds.H() - PLUG_PADDING : PLUG_HEIGHT, pGraphics->GetDrawScale());
-    }, "Toggle Keyboard", DEFAULT_STYLE.WithColor(kFG, COLOR_WHITE)));
+    }, "Toggle Keyboard", style.WithColor(kFG, COLOR_WHITE)));
+    channelButtonRect.Translate(0, channelButtonRect.H());
+
+    // --- Testing for save and restore presets ----
+
+    pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
+      DumpPresetBlob("./my_preset_b64.txt");
+    }, "DumpPresetBlob", style.WithColor(kFG, COLOR_WHITE)));
+
+    channelButtonRect.Translate(0, channelButtonRect.H());
+
+    pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
+      DumpPresetChunk("./my_preset.txt");
+    }, "DumpPresetChunk", style.WithColor(kFG, COLOR_WHITE)));
+
+    channelButtonRect.Translate(0, channelButtonRect.H());
+
+    pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
+      FILE* fp = fopen("./my_preset.txt", "rb");
+
+      if (fp) {
+        IByteChunk pgm;
+        long fileSize;
+
+        fseek(fp, 0, SEEK_END);
+        fileSize = ftell(fp);
+        rewind(fp);
+
+        pgm.Resize((int) fileSize);
+        fread(pgm.GetData(), fileSize, 1, fp);
+
+        fclose(fp);
+        MakePresetFromChunk("Preset from Chunk", pgm);
+        printf("Loaded %d bytes from preset chunk.\n", fileSize);
+      }
+    }, "LoadPresetChunk", style.WithColor(kFG, COLOR_WHITE)));
 
     //TODO(montag): Make each section order-independent (use absolute positioning or positioning constants)
 #pragma mark - Presets
 
     //TODO(montag): Create factory presets
-    MakeDefaultPreset(nullptr, kNumPresets);
+    MakeDefaultPreset(nullptr, 1); // kNumPresets);
 
     pGraphics->AttachControl(new IVBakedPresetManagerControl(b.ReduceFromTop(40).GetFromRight(300), style.WithLabelText({15.f, EVAlign::Middle}))); // "./presets", "nesvst"));
 
