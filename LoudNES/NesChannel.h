@@ -78,7 +78,7 @@ public:
     }
   }
 
-  virtual void Trigger(int baseNote, double velocity, bool isRetrigger = true) {
+  virtual void Trigger(int baseNote, double velocity, bool isRetrigger) {
     mBaseNote = mKeyTrack ? baseNote : 64;
     if (isRetrigger) {
       mVelocity = mVelSens ? velocity : 1.f;
@@ -317,7 +317,7 @@ public:
     mRegOffset = (mChannel - NesApu::Channel::Vrc6Pulse1) * 0x1000;
   }
 
-  virtual int GetDuty() {
+  virtual int GetDuty() override {
     // VRC6 pulse channels duty has 8 levels; 0: 1/16, 1: 2/16,... 7: 8/16
     return mEnvs.duty.GetValueAndAdvance();
   }
@@ -371,9 +371,9 @@ struct NesChannels {
     , triangle(std::move(t))
     , noise(std::move(n))
     , dpcm(std::move(d))
-    , vrc6pulse1(vp1)
-    , vrc6pulse2(vp2)
-    , vrc6saw(s)
+    , vrc6pulse1(std::move(vp1))
+    , vrc6pulse2(std::move(vp2))
+    , vrc6saw(std::move(s))
     , allChannels({&pulse1, &pulse2, &triangle, &noise, &dpcm, &vrc6pulse1, &vrc6pulse2, &vrc6saw}) {}
 
   NesChannelPulse     pulse1;
