@@ -264,7 +264,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
     }, "Toggle Keyboard", style.WithColor(kFG, COLOR_WHITE)));
     channelButtonRect.Translate(0, channelButtonRect.H());
 
-    // --- Testing for save and restore presets ----
+// --- Testing for save and restore presets, April 2021 ----
 
     pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
       DumpPresetBlob("./my_preset_b64.txt");
@@ -273,8 +273,25 @@ LoudNES::LoudNES(const InstanceInfo& info)
     channelButtonRect.Translate(0, channelButtonRect.H());
 
     pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
-      DumpPresetChunk("./my_preset.txt");
-    }, "DumpPresetChunk", style.WithColor(kFG, COLOR_WHITE)));
+      FILE* fp = fopen("./my_preset.txt", "w");
+
+      if (fp) {
+        int idx = GetCurrentPresetIdx();
+
+        IByteChunk pPresetChunk;
+        SerializeState(pPresetChunk); // As opposed to &mPresets.Get(mCurrentPresetIdx)->mChunk;
+        uint8_t *bytes = pPresetChunk.GetData();
+
+        printf("[ ");
+        for (int i = 0; i < pPresetChunk.Size(); i++) {
+          putc(bytes[i], fp);
+          printf("%*u ", 3, bytes[i]);
+        }
+        fclose(fp);
+        printf("]\n");
+        printf("DumpPresetChunk; idx=%d, name=%s\n", idx, GetPresetName(idx));
+      }
+    }, "Dump Preset", style.WithColor(kFG, COLOR_WHITE)));
 
     channelButtonRect.Translate(0, channelButtonRect.H());
 
@@ -293,10 +310,18 @@ LoudNES::LoudNES(const InstanceInfo& info)
         fread(pgm.GetData(), fileSize, 1, fp);
 
         fclose(fp);
-        MakePresetFromChunk("Preset from Chunk", pgm);
-        printf("Loaded %d bytes from preset chunk.\n", fileSize);
+//        MakePresetFromChunk("Preset from Chunk", pgm);
+        printf("Loaded %ld bytes from preset chunk.\n", fileSize);
+        bool restoredOK = UnserializeState(pgm, 0);
+        if (restoredOK) {
+          OnPresetsModified();
+          SendCurrentParamValuesFromDelegate();
+          printf("Restored preset.\n");
+        } else {
+          printf("Failed to UnserializeState!\n");
+        }
       }
-    }, "LoadPresetChunk", style.WithColor(kFG, COLOR_WHITE)));
+    }, "Load Preset", style.WithColor(kFG, COLOR_WHITE)));
 
     //TODO(montag): Make each section order-independent (use absolute positioning or positioning constants)
 #pragma mark - Presets
@@ -517,7 +542,7 @@ bool LoudNES::SerializeState(IByteChunk &chunk) const {
   for (auto channel : mDSP.mNesChannels->allChannels) {
     channel->Serialize(chunk);
   }
-  return iplug::IPluginBase::SerializeState(chunk);
+  return SerializeParams(chunk);
 }
 
 int LoudNES::UnserializeState(const IByteChunk &chunk, int startPos) {
@@ -525,7 +550,7 @@ int LoudNES::UnserializeState(const IByteChunk &chunk, int startPos) {
   for (auto channel : mDSP.mNesChannels->allChannels) {
     pos = channel->Deserialize(chunk, pos);
   }
-  return iplug::IPluginBase::UnserializeState(chunk, pos);
+  return UnserializeParams(chunk, pos);
 }
 
 bool LoudNES::OnMessage(int msgTag, int ctrlTag, int dataSize, const void* pData)

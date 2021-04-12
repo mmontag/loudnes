@@ -99,7 +99,8 @@ public:
 
   int Deserialize(const iplug::IByteChunk &chunk, int startPos = 0) {
     int pos = startPos;
-    printf("Deserializing envelope from chunk %p, size %d, startPos %d\n", &chunk, chunk.Size(), startPos);
+    printf("Deserializing envelope from chunk %p, size %d, startPos %d\n",
+           &chunk, kMaxSteps * sizeof(mValues[0]), startPos);
     for (int i = 0; i < kMaxSteps; i++) {
       int* addr = &mValues[i];
 //      printf("-- Chunk pos: %d, Target address %p\n", startPos + i * 4, addr);
