@@ -32,7 +32,7 @@ public:
     mSampleMenu.SetFunction([this](IPopupMenu* pMenu) {
       int idx = pMenu->GetChosenItemIdx();
       mPatch->sampleIdx = idx;
-      GetUI()->ForControlInGroup("DpcmEditor", [](IControl &control) { control.SetDirty(false); });
+      GetUI()->ForControlInGroup("DpcmEditor", [](IControl* control) { control->SetDirty(false); });
     });
   }
 
@@ -84,7 +84,7 @@ public:
     // Pitch Spinner
     IActionFunction spinnerFunc = [this](IControl *control) {
       mPatch->pitch = (int) dynamic_cast<SpinnerControl *>(control)->GetRealValue();
-      GetUI()->ForControlInGroup("DpcmEditor", [](IControl &control) { control.SetDirty(false); });
+      GetUI()->ForControlInGroup("DpcmEditor", [](IControl *control) { control->SetDirty(false); });
     };
     GetUI()->AttachControl(mPitch = new SpinnerControl(box,
                                                        kNoParameter,
@@ -99,7 +99,7 @@ public:
     // Loop Checkbox
     IActionFunction toggleFunc = [this](IControl *control) {
       mPatch->loop = (bool) control->GetValue();
-      GetUI()->ForControlInGroup("DpcmEditor", [](IControl &control) { control.SetDirty(false); });
+      GetUI()->ForControlInGroup("DpcmEditor", [](IControl *control) { control->SetDirty(false); });
     };
     GetUI()->AttachControl(mLoop = new IVToggleControl(box,
                                                        toggleFunc,
@@ -112,7 +112,7 @@ public:
     mPatch = patch;
     mPitch->SetValueFromDelegate(patch->pitch);
     mLoop->SetValueFromUserInput(patch->loop);
-    GetUI()->ForControlInGroup("DpcmEditor", [](IControl &control) { control.SetDirty(false); });
+    GetUI()->ForControlInGroup("DpcmEditor", [](IControl *control) { control->SetDirty(false); });
   }
 
   void Draw(IGraphics &g) override {
@@ -288,9 +288,9 @@ public:
   }
 
   void Hide(bool hide) override {
-    GetUI()->ForControlInGroup("DpcmEditor", [this, hide](IControl &control) {
-      if (&control != this)
-        control.Hide(hide);
+    GetUI()->ForControlInGroup("DpcmEditor", [this, hide](IControl *control) {
+      if (control != this)
+        control->Hide(hide);
     });
     IControl::Hide(hide);
   }

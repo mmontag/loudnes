@@ -169,11 +169,11 @@ LoudNES::LoudNES(const InstanceInfo& info)
       const int ch = static_cast<IVTabSwitchControl *>(pCaller)->GetSelectedIdx();
       bool isDpcm = ch == NesApu::Channel::Dpcm;
       GetUI()->GetControlWithTag(kCtrlTagDpcmEditor)->Hide(!isDpcm);
-      GetUI()->ForControlInGroup("StepSequencers", [=](IControl &control) {
-        control.Hide(isDpcm);
+      GetUI()->ForControlInGroup("StepSequencers", [=](IControl *control) {
+        control->Hide(isDpcm);
       });
-      GetUI()->ForControlInGroup("Knobs", [=](IControl &control) {
-        control.Hide(isDpcm);
+      GetUI()->ForControlInGroup("Knobs", [=](IControl *control) {
+        control->Hide(isDpcm);
       });
 
       // Reassign channel-specific toggles (Key track, Velocity sensitivity, Legato)
@@ -415,7 +415,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
 void LoudNES::OnPresetsModified() {
   printf("-- Presets modified\n");
   UpdateStepSequencers();
-  GetUI()->ForControlInGroup("DpcmEditor", [](IControl &control) { control.SetDirty(false); });
+  GetUI()->ForControlInGroup("DpcmEditor", [](IControl *control) { control->SetDirty(false); });
 
   iplug::IPluginBase::OnPresetsModified();
 }
@@ -445,7 +445,7 @@ void LoudNES::UpdateStepSequencers() {
                                         {1, kCtrlTagEnvelope2},
                                         {2, kCtrlTagEnvelope3},
                                         {3, kCtrlTagEnvelope4}}) {
-    auto seq = static_cast<StepSequencer *>(GetUI()->GetControlWithTag(seqGroup.seqCtrlTag));
+    auto seq = dynamic_cast<StepSequencer *>(GetUI()->GetControlWithTag(seqGroup.seqCtrlTag));
     auto nesEnv = mDSP.mNesEnvs[seqGroup.idx];
 
     // Convert NesEnvelope step value to StepSequencer step value (normalized)
