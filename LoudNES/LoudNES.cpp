@@ -4,6 +4,9 @@
 #include "DpcmEditorControl.h"
 #include "KnobControl.h"
 #include "ChannelSwitchControl.h"
+#include "json.hpp"
+
+using namespace nlohmann;
 
 LoudNES::LoudNES(const InstanceInfo& info)
 : Plugin(info, MakeConfig(kNumParams, kNumPresets))
@@ -273,24 +276,30 @@ LoudNES::LoudNES(const InstanceInfo& info)
     channelButtonRect.Translate(0, channelButtonRect.H());
 
     pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
-      FILE* fp = fopen("./my_preset.txt", "w");
-
-      if (fp) {
-        int idx = GetCurrentPresetIdx();
-
-        IByteChunk pPresetChunk;
-        SerializeState(pPresetChunk); // As opposed to &mPresets.Get(mCurrentPresetIdx)->mChunk;
-        uint8_t *bytes = pPresetChunk.GetData();
-
-        printf("[ ");
-        for (int i = 0; i < pPresetChunk.Size(); i++) {
-          putc(bytes[i], fp);
-          printf("%*u ", 3, bytes[i]);
-        }
-        fclose(fp);
-        printf("]\n");
-        printf("DumpPresetChunk; idx=%d, name=%s\n", idx, GetPresetName(idx));
-      }
+//      FILE* fp = fopen("./my_preset.txt", "w");
+//
+//      if (fp) {
+//        int idx = GetCurrentPresetIdx();
+//
+//        IByteChunk pPresetChunk;
+//        SerializeState(pPresetChunk); // As opposed to &mPresets.Get(mCurrentPresetIdx)->mChunk;
+//        uint8_t *bytes = pPresetChunk.GetData();
+//
+//        printf("[ ");
+//        for (int i = 0; i < pPresetChunk.Size(); i++) {
+//          putc(bytes[i], fp);
+//          printf("%*u ", 3, bytes[i]);
+//        }
+//        fclose(fp);
+//        printf("]\n");
+//        printf("DumpPresetChunk; idx=%d, name=%s\n", idx, GetPresetName(idx));
+//      }
+      std::ofstream out("./my_preset.json");
+      json j = SerializeJson();
+      out << j.dump(2);
+      out.close();
+      int idx = GetCurrentPresetIdx();
+      printf("DumpPresetChunk; idx=%d, name=%s\n", idx, GetPresetName(idx));
     }, "Dump Preset", style.WithColor(kFG, COLOR_WHITE)));
 
     channelButtonRect.Translate(0, channelButtonRect.H());
@@ -551,6 +560,18 @@ int LoudNES::UnserializeState(const IByteChunk &chunk, int startPos) {
     pos = channel->Deserialize(chunk, pos);
   }
   return UnserializeParams(chunk, pos);
+}
+
+json LoudNES::SerializeJson() {
+  json j;
+  j["pulse1"] = mDSP.mNesChannels->pulse1.SerializeJson();
+  j["triangle"] = mDSP.mNesChannels->triangle.SerializeJson();
+  return j;
+}
+
+void LoudNES::DeserializeJson(json &j) {
+  mDSP.mNesChannels->pulse1.DeserializeJson(j["pulse1"]);
+  mDSP.mNesChannels->triangle.DeserializeJson(j["triangle"]);
 }
 
 bool LoudNES::OnMessage(int msgTag, int ctrlTag, int dataSize, const void* pData)

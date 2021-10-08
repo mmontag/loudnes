@@ -2,7 +2,9 @@
 
 #include "IPlug_include_in_plug_hdr.h"
 #include "IControls.h"
+#include "json.hpp"
 
+// Forward Declarations
 class StepSequencer;
 
 const int kNumPresets = 8;
@@ -153,4 +155,8 @@ private:
   //
   // In any case, there is room for improvement here.
   void UpdateStepSequencerAndParamsFromEnv(int paramEnvLoopPoint, NesEnvelope *env, StepSequencer* seq);
+
+  json SerializeJson();
+
+  void DeserializeJson(json &j);
 };

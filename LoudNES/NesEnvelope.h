@@ -10,8 +10,25 @@
 
 #include "ISender.h"
 #include "IPlugStructs.h"
+#include "json.hpp"
 
 const int kMaxSteps = 64;
+
+using namespace nlohmann;
+
+char charMap[32] = "0123456789abcdefghijklmnopqrstu";
+char toChar(int i, int offset=0) {
+  return charMap[i - offset];
+}
+int fromChar(char c, int offset=0) {
+  int i;
+  if (c >= 'a') {
+    i = c - 'a' + 10;
+  } else {
+    i = c - '0';
+  }
+  return i + offset;
+}
 
 class NesEnvelope {
 public:
@@ -108,6 +125,24 @@ public:
 //      pos = chunk.Get(addr, startPos + i * 4);
     }
     return pos;
+  }
+
+  json SerializeJson() {
+    string vals;
+    for (int i = 0; i < kMaxSteps; i++) {
+      vals += toChar(mValues[i], mMinVal);
+    }
+//    json j(mValues);
+    json j(vals);
+    return j;
+  }
+
+  void DeserializeJson(json &j) {
+//    mValues = j.get<array<int, kMaxSteps>>();
+    string vals = j.get<string>();
+    for (int i = 0; i < kMaxSteps; i++) {
+      mValues[i] =  fromChar(vals[i], mMinVal);
+    }
   }
 
   array<int, kMaxSteps> mValues = {0};

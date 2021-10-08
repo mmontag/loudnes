@@ -11,10 +11,12 @@
 #include "NesApu.h"
 #include "NesDpcm.h"
 #include "NesEnvelope.h"
+#include "json.hpp"
 #include <algorithm>
 #include <utility>
 
 using namespace std;
+using namespace nlohmann;
 
 class NesChannel
 {
@@ -117,6 +119,22 @@ public:
       pos = env->Deserialize(chunk, pos);
     }
     return pos;
+  }
+
+  virtual json SerializeJson() {
+    json j;
+    j["volume"] = mEnvs.volume.SerializeJson();
+    j["pitch"] = mEnvs.pitch.SerializeJson();
+    j["duty"] = mEnvs.duty.SerializeJson();
+    j["arp"] = mEnvs.arp.SerializeJson();
+    return j;
+  }
+
+  virtual void DeserializeJson(json &j) {
+    mEnvs.volume.DeserializeJson(j["volume"]);
+    mEnvs.pitch.DeserializeJson(j["pitch"]);
+    mEnvs.duty.DeserializeJson(j["duty"]);
+    mEnvs.arp.DeserializeJson(j["arp"]);
   }
 
   //protected:
@@ -317,7 +335,7 @@ public:
     mRegOffset = (mChannel - NesApu::Channel::Vrc6Pulse1) * 0x1000;
   }
 
-  virtual int GetDuty() override {
+  int GetDuty() override {
     // VRC6 pulse channels duty has 8 levels; 0: 1/16, 1: 2/16,... 7: 8/16
     return mEnvs.duty.GetValueAndAdvance();
   }

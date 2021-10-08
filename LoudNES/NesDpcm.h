@@ -15,10 +15,12 @@
 #include "./resources/dmc/TinyToon4.h"
 #include "./resources/dmc/TinyToon5.h"
 #include "./resources/dmc/TinyToon6.h"
+#include "json.hpp"
 #include <map>
 #include <utility>
 
 using namespace std;
+using namespace nlohmann;
 
 struct NesDpcmSample {
   string name = "(No Sample)";
@@ -71,6 +73,14 @@ struct NesDpcmSample {
       data.push_back(v);
     }
     return pos;
+  }
+
+  json SerializeJson() {
+    return nullptr;
+  }
+
+  void DeserializeJson(json &j) {
+
   }
 
   int length() const {
