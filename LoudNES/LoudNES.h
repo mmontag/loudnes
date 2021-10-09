@@ -156,7 +156,7 @@ private:
   // In any case, there is room for improvement here.
   void UpdateStepSequencerAndParamsFromEnv(int paramEnvLoopPoint, NesEnvelope *env, StepSequencer* seq);
 
-  json SerializeJson();
+  json SerializeJson() const;
 
-  void DeserializeJson(json &j);
+  void DeserializeJson(json &j) const;
 };

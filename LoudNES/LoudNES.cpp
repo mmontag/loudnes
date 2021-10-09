@@ -276,24 +276,6 @@ LoudNES::LoudNES(const InstanceInfo& info)
     channelButtonRect.Translate(0, channelButtonRect.H());
 
     pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
-//      FILE* fp = fopen("./my_preset.txt", "w");
-//
-//      if (fp) {
-//        int idx = GetCurrentPresetIdx();
-//
-//        IByteChunk pPresetChunk;
-//        SerializeState(pPresetChunk); // As opposed to &mPresets.Get(mCurrentPresetIdx)->mChunk;
-//        uint8_t *bytes = pPresetChunk.GetData();
-//
-//        printf("[ ");
-//        for (int i = 0; i < pPresetChunk.Size(); i++) {
-//          putc(bytes[i], fp);
-//          printf("%*u ", 3, bytes[i]);
-//        }
-//        fclose(fp);
-//        printf("]\n");
-//        printf("DumpPresetChunk; idx=%d, name=%s\n", idx, GetPresetName(idx));
-//      }
       std::ofstream out("./my_preset.json");
       json j = SerializeJson();
       out << j.dump(2);
@@ -305,31 +287,14 @@ LoudNES::LoudNES(const InstanceInfo& info)
     channelButtonRect.Translate(0, channelButtonRect.H());
 
     pGraphics->AttachControl(new IVButtonControl(channelButtonRect, [=](IControl *pCaller) {
-      FILE* fp = fopen("./my_preset.txt", "rb");
-
-      if (fp) {
-        IByteChunk pgm;
-        long fileSize;
-
-        fseek(fp, 0, SEEK_END);
-        fileSize = ftell(fp);
-        rewind(fp);
-
-        pgm.Resize((int) fileSize);
-        fread(pgm.GetData(), fileSize, 1, fp);
-
-        fclose(fp);
-//        MakePresetFromChunk("Preset from Chunk", pgm);
-        printf("Loaded %ld bytes from preset chunk.\n", fileSize);
-        bool restoredOK = UnserializeState(pgm, 0);
-        if (restoredOK) {
-          OnPresetsModified();
-          SendCurrentParamValuesFromDelegate();
-          printf("Restored preset.\n");
-        } else {
-          printf("Failed to UnserializeState!\n");
-        }
-      }
+      std::ifstream jsonFile("./my_preset.json");
+      json j;
+      jsonFile >> j;
+      DeserializeJson(j);
+      printf("Loaded %ld bytes from json.\n", j.size());
+      OnPresetsModified();
+      SendCurrentParamValuesFromDelegate();
+      printf("Restored preset.\n");
     }, "Load Preset", style.WithColor(kFG, COLOR_WHITE)));
 
     //TODO(montag): Make each section order-independent (use absolute positioning or positioning constants)
@@ -562,16 +527,28 @@ int LoudNES::UnserializeState(const IByteChunk &chunk, int startPos) {
   return UnserializeParams(chunk, pos);
 }
 
-json LoudNES::SerializeJson() {
+json LoudNES::SerializeJson() const {
   json j;
-  j["pulse1"] = mDSP.mNesChannels->pulse1.SerializeJson();
-  j["triangle"] = mDSP.mNesChannels->triangle.SerializeJson();
+  j["pulse1"]     = mDSP.mNesChannels->pulse1.SerializeJson();
+  j["pulse2"]     = mDSP.mNesChannels->pulse2.SerializeJson();
+  j["triangle"]   = mDSP.mNesChannels->triangle.SerializeJson();
+  j["noise"]      = mDSP.mNesChannels->noise.SerializeJson();
+  j["dpcm"]       = mDSP.mNesChannels->dpcm.SerializeJson();
+  j["vrc6pulse1"] = mDSP.mNesChannels->vrc6pulse1.SerializeJson();
+  j["vrc6pulse2"] = mDSP.mNesChannels->vrc6pulse2.SerializeJson();
+  j["vrc6saw"]    = mDSP.mNesChannels->vrc6saw.SerializeJson();
   return j;
 }
 
-void LoudNES::DeserializeJson(json &j) {
+void LoudNES::DeserializeJson(json &j) const {
   mDSP.mNesChannels->pulse1.DeserializeJson(j["pulse1"]);
+  mDSP.mNesChannels->pulse2.DeserializeJson(j["pulse2"]);
   mDSP.mNesChannels->triangle.DeserializeJson(j["triangle"]);
+  mDSP.mNesChannels->noise.DeserializeJson(j["noise"]);
+  mDSP.mNesChannels->dpcm.DeserializeJson(j["dpcm"]);
+  mDSP.mNesChannels->vrc6pulse1.DeserializeJson(j["vrc6pulse1"]);
+  mDSP.mNesChannels->vrc6pulse2.DeserializeJson(j["vrc6pulse2"]);
+  mDSP.mNesChannels->vrc6saw.DeserializeJson(j["vrc6saw"]);
 }
 
 bool LoudNES::OnMessage(int msgTag, int ctrlTag, int dataSize, const void* pData)
