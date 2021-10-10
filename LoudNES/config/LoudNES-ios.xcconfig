@@ -9,19 +9,32 @@ IPLUG2_ROOT = ../../iPlug2
 //------------------------------
 // Global build settings
 
+// Override common-mac.xcconfig for out-of-source build
+// this is used for macOS Developer ID / Appstore code-signing
+CERTIFICATE_ID = Matthew Montag
+DEVELOPMENT_TEAM = GBRA3936J4 // log in to developer.apple.com and see the end of the URL e.g. https://developer.apple.com/account/#/overview/686EDA2T8T
+
 // the basename of the vst, vst3, app, component, aaxplugin
 BINARY_NAME = LoudNES
 
 // ------------------------------
 // HEADER AND LIBRARY SEARCH PATHS
-EXTRA_INC_PATHS = $(IGRAPHICS_INC_PATHS)
+EXTRA_INC_PATHS = $(IGRAPHICS_INC_PATHS) ../NesSndEmu
 EXTRA_LIB_PATHS = $(IGRAPHICS_LIB_PATHS)
-EXTRA_LNK_FLAGS = -framework Metal -framework MetalKit //$(IGRAPHICS_LNK_FLAGS)
+
+// Skia:
+EXTRA_LNK_FLAGS =  -framework Metal -framework MetalKit $(IGRAPHICS_LNK_FLAGS)
+// NanoVG:
+//EXTRA_LNK_FLAGS = -framework Metal -framework MetalKit
 
 //------------------------------
 // PREPROCESSOR MACROS
 
-EXTRA_ALL_DEFS = OBJC_PREFIX=vLoudNES IGRAPHICS_NANOVG IGRAPHICS_METAL SAMPLE_TYPE_FLOAT
+// Skia:
+EXTRA_ALL_DEFS = OBJC_PREFIX=vLoudNES IGRAPHICS_SKIA IGRAPHICS_METAL SAMPLE_TYPE_FLOAT
+// NanoVG:
+//EXTRA_ALL_DEFS = OBJC_PREFIX=vLoudNES IGRAPHICS_NANOVG IGRAPHICS_METAL SAMPLE_TYPE_FLOAT
+
 //EXTRA_DEBUG_DEFS =
 //EXTRA_RELEASE_DEFS =
 //EXTRA_TRACER_DEFS =
