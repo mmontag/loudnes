@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "MidiSynth.h"
 #include "NesChannel.h"
 #include "NesApu.h"
@@ -18,7 +20,7 @@ class NesVoice : public SynthVoice   {
 public:
   NesVoice(shared_ptr<Simple_Apu> nesApu, NesChannel* nesChannel) :
   mNesChannel(nesChannel),
-  mNesApu(nesApu) {}
+  mNesApu(std::move(nesApu)) {}
 
   bool GetBusy() const override
   {
@@ -29,8 +31,6 @@ public:
 
   void Trigger(double level, bool isRetrigger) override
   {
-    DBGMSG("Trigger mKey %d - level %0.2f\n", mKey, level);
-
     mNesChannel->Trigger(mKey, level, isRetrigger);
   }
 
@@ -42,7 +42,7 @@ public:
   void ProcessSamplesAccumulating(T** inputs, T** outputs, int nInputs, int nOutputs, int startIdx, int nFrames) override
   {
     // inputs to the synthesizer can just fetch a value every block, like this:
-    double pitchBend = mInputs[kVoiceControlPitchBend].endValue;
+    float pitchBend = mInputs[kVoiceControlPitchBend].endValue;
     mNesChannel->SetPitchBend(pitchBend);
   }
 
