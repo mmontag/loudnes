@@ -48,7 +48,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
   mLayoutFunc = [&](IGraphics* pGraphics) {
     pGraphics->AttachCornerResizer(EUIResizerMode::Scale, false);
     pGraphics->EnableMouseOver(false);
-    pGraphics->EnableMultiTouch(false);
+    pGraphics->EnableMultiTouch(true);
 
 #ifdef OS_WEB
     pGraphics->AttachPopupMenuControl();
