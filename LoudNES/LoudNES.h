@@ -158,5 +158,5 @@ private:
 
   json SerializeJson() const;
 
-  void DeserializeJson(json &j) const;
+  void DeserializeJson(json &j);
 };

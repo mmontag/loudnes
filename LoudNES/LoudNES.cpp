@@ -537,10 +537,18 @@ json LoudNES::SerializeJson() const {
   j["vrc6pulse1"] = mDSP.mNesChannels->vrc6pulse1.SerializeJson();
   j["vrc6pulse2"] = mDSP.mNesChannels->vrc6pulse2.SerializeJson();
   j["vrc6saw"]    = mDSP.mNesChannels->vrc6saw.SerializeJson();
+
+  // Serialize params
+  int n = NParams();
+  for (int i = 0; i < n; i++) {
+    auto param = GetParam(i);
+    j[param->GetName()] = param->Value();
+  }
+
   return j;
 }
 
-void LoudNES::DeserializeJson(json &j) const {
+void LoudNES::DeserializeJson(json &j) {
   mDSP.mNesChannels->pulse1.DeserializeJson(j["pulse1"]);
   mDSP.mNesChannels->pulse2.DeserializeJson(j["pulse2"]);
   mDSP.mNesChannels->triangle.DeserializeJson(j["triangle"]);
@@ -549,6 +557,17 @@ void LoudNES::DeserializeJson(json &j) const {
   mDSP.mNesChannels->vrc6pulse1.DeserializeJson(j["vrc6pulse1"]);
   mDSP.mNesChannels->vrc6pulse2.DeserializeJson(j["vrc6pulse2"]);
   mDSP.mNesChannels->vrc6saw.DeserializeJson(j["vrc6saw"]);
+
+  // Deserialize params
+  ENTER_PARAMS_MUTEX
+  int n = NParams();
+  for (int i = 0; i < n; i++) {
+    auto param = GetParam(i);
+    double v = j[param->GetName()].get<double>();
+    param->Set(v);
+  }
+  OnParamReset(kPresetRecall);
+  LEAVE_PARAMS_MUTEX
 }
 
 bool LoudNES::OnMessage(int msgTag, int ctrlTag, int dataSize, const void* pData)
