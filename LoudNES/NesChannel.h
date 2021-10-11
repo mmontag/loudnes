@@ -26,6 +26,7 @@ public:
   , mEnvs(nesEnvelopes)
   , mChannel(channel)
   , mNoteTable(NesApu::GetNoteTableForChannel(channel))
+  , mVelocity(0)
   // TODO: pal, numN163Channels
   {}
 
@@ -157,7 +158,8 @@ public:
   int mRegOffset = 0;
   int mPrevPeriodHi = 1000;
 
-  NesChannelPulse(shared_ptr<Simple_Apu> nesApu, NesApu::Channel channel, const NesEnvelopes &nesEnvelopes) : NesChannel(nesApu, channel, nesEnvelopes)
+  NesChannelPulse(shared_ptr<Simple_Apu> nesApu, NesApu::Channel channel, const NesEnvelopes &nesEnvelopes)
+  : NesChannel(std::move(nesApu), channel, nesEnvelopes)
   {
     // 0x4000 for Square1, 0x4004 for Square2
     mRegOffset = mChannel * 4;
@@ -212,7 +214,8 @@ public:
 class NesChannelTriangle : public NesChannel
 {
 public:
-  NesChannelTriangle(shared_ptr<Simple_Apu> nesApu, NesApu::Channel channel, const NesEnvelopes &nesEnvelopes) : NesChannel(nesApu, channel, nesEnvelopes) {
+  NesChannelTriangle(shared_ptr<Simple_Apu> nesApu, NesApu::Channel channel, const NesEnvelopes &nesEnvelopes)
+  : NesChannel(std::move(nesApu), channel, nesEnvelopes) {
     mNoteTableMidiOffset = 12;
   }
 
@@ -241,7 +244,8 @@ public:
 class NesChannelNoise : public NesChannel
 {
 public:
-  NesChannelNoise(shared_ptr<Simple_Apu> nesApu, NesApu::Channel channel, const NesEnvelopes &nesEnvelopes) : NesChannel(nesApu, channel, nesEnvelopes) {}
+  NesChannelNoise(shared_ptr<Simple_Apu> nesApu, NesApu::Channel channel, const NesEnvelopes &nesEnvelopes)
+  : NesChannel(std::move(nesApu), channel, nesEnvelopes) {}
 
   int GetPeriod() override {
     return (mBaseNote + mEnvs.arp.GetValueAndAdvance()) & 0x0f;
@@ -267,7 +271,7 @@ class NesChannelDpcm : public NesChannel
 {
 public:
   NesChannelDpcm(shared_ptr<Simple_Apu> nesApu, NesApu::Channel channel, shared_ptr<NesDpcm> nesDpcm)
-  : NesChannel(nesApu, channel, NesEnvelopes())
+  : NesChannel(std::move(nesApu), channel, NesEnvelopes())
   , mNesDpcm(std::move(nesDpcm))
   {}
 
@@ -331,7 +335,7 @@ public:
   int mRegOffset = 0;
 
   NesChannelVrc6Pulse(shared_ptr<Simple_Apu> nesApu, NesApu::Channel channel, const NesEnvelopes &nesEnvelopes)
-    : NesChannel(nesApu, channel, nesEnvelopes) {
+    : NesChannel(std::move(nesApu), channel, nesEnvelopes) {
     mRegOffset = (mChannel - NesApu::Channel::Vrc6Pulse1) * 0x1000;
   }
 
@@ -362,7 +366,7 @@ class NesChannelVrc6Saw : public NesChannel
 {
 public:
   NesChannelVrc6Saw(shared_ptr<Simple_Apu> nesApu, NesApu::Channel channel, const NesEnvelopes &nesEnvelopes)
-    : NesChannel(nesApu, channel, nesEnvelopes) {}
+    : NesChannel(std::move(nesApu), channel, nesEnvelopes) {}
 
   void UpdateAPU() override {
     if (mEnvs.arp.GetState() == NesEnvelope::ENV_OFF) {
