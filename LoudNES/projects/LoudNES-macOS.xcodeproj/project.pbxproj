@@ -270,7 +270,6 @@
 		7C12CC5B25DB5B8200A5EC9C /* build_macos.sh in Resources */ = {isa = PBXBuildFile; fileRef = 7C12CC2C25DB5B8100A5EC9C /* build_macos.sh */; };
 		7C12CC5C25DB5B8200A5EC9C /* SndEmu.vcxproj in Resources */ = {isa = PBXBuildFile; fileRef = 7C12CC2D25DB5B8100A5EC9C /* SndEmu.vcxproj */; };
 		7C12CC5D25DB5B8200A5EC9C /* DllWrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C12CC2E25DB5B8100A5EC9C /* DllWrapper.cpp */; };
-		7C12CC5E25DB5B8200A5EC9C /* Icon_ in Resources */ = {isa = PBXBuildFile; fileRef = 7C12CC2F25DB5B8100A5EC9C /* Icon_ */; };
 		7C12CC5F25DB5B8200A5EC9C /* Nes_Sunsoft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C12CC3225DB5B8100A5EC9C /* Nes_Sunsoft.cpp */; };
 		7C12CC6025DB5B8200A5EC9C /* Nes_Fds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C12CC3325DB5B8100A5EC9C /* Nes_Fds.cpp */; };
 		7C12CC6125DB5B8200A5EC9C /* Nes_Oscs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C12CC3425DB5B8100A5EC9C /* Nes_Oscs.cpp */; };
@@ -810,7 +809,6 @@
 		7C12CC2C25DB5B8100A5EC9C /* build_macos.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = build_macos.sh; sourceTree = "<group>"; };
 		7C12CC2D25DB5B8100A5EC9C /* SndEmu.vcxproj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SndEmu.vcxproj; sourceTree = "<group>"; };
 		7C12CC2E25DB5B8100A5EC9C /* DllWrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DllWrapper.cpp; sourceTree = "<group>"; };
-		7C12CC2F25DB5B8100A5EC9C /* Icon_ */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Icon_; sourceTree = "<group>"; };
 		7C12CC3125DB5B8100A5EC9C /* Nes_Apu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Nes_Apu.h; sourceTree = "<group>"; };
 		7C12CC3225DB5B8100A5EC9C /* Nes_Sunsoft.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Nes_Sunsoft.cpp; sourceTree = "<group>"; };
 		7C12CC3325DB5B8100A5EC9C /* Nes_Fds.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Nes_Fds.cpp; sourceTree = "<group>"; };
@@ -1604,7 +1602,6 @@
 				7C12CC2C25DB5B8100A5EC9C /* build_macos.sh */,
 				7C12CC2D25DB5B8100A5EC9C /* SndEmu.vcxproj */,
 				7C12CC2E25DB5B8100A5EC9C /* DllWrapper.cpp */,
-				7C12CC2F25DB5B8100A5EC9C /* Icon_ */,
 				7C12CC3025DB5B8100A5EC9C /* nes_apu */,
 				7C12CC5025DB5B8100A5EC9C /* readme.txt */,
 				7C12CC5125DB5B8100A5EC9C /* LGPL.txt */,
@@ -2399,7 +2396,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7C12CC5E25DB5B8200A5EC9C /* Icon_ in Resources */,
 				7C12CC5C25DB5B8200A5EC9C /* SndEmu.vcxproj in Resources */,
 				7C12CC5625DB5B8200A5EC9C /* notes.txt in Resources */,
 				7C12CC5725DB5B8200A5EC9C /* SndEmu.def in Resources */,
