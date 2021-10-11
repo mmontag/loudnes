@@ -169,7 +169,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
     IRECT channelButtonRect = channelPanel.GetFromTop(34.f);
 
     auto handleChannelSwitch = [this](IControl *pCaller) {
-      const int ch = static_cast<IVTabSwitchControl *>(pCaller)->GetSelectedIdx();
+      const int ch = dynamic_cast<ChannelSwitchControl *>(pCaller)->GetSelectedIdx();
       bool isDpcm = ch == NesApu::Channel::Dpcm;
       GetUI()->GetControlWithTag(kCtrlTagDpcmEditor)->Hide(!isDpcm);
       GetUI()->ForControlInGroup("StepSequencers", [=](IControl *control) {
