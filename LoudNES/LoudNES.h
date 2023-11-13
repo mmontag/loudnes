@@ -108,6 +108,7 @@ enum EControlTags
 using namespace iplug;
 using namespace igraphics;
 
+// Inherits from IEditorDelegate
 class LoudNES final : public Plugin
 {
 public:
@@ -131,24 +132,29 @@ public:
   static int ParamFromCh(int channelNum, int subParam) {
     return kParamChannelBase + channelNum * kNumChParams + subParam;
   }
+  void HandleDrop(const char *data);
 
 private:
   LoudNESDSP<iplug::sample> mDSP;
   // TODO: Figure out why ISender works best with queue size 8
   ISender<1, 8, int> mEnvelopeVisSender;
+  // Index of currently active channel (Pulse 1 = 0, Pulse 2 = 1...)
+  int mCurChannelIdx;
 
 #endif
 
-  void UpdateStepSequencers();
+  void UpdateStepSequencers(int activeChannel);
 
   // TODO(montag): Code smell. State flows in two directions.
   //
-  // This is invoked in the param change callback functions because the envelopes have "coupled" params
+  // This is invoked in the param change callback functions because the envelopes have constraints
   // (e.g., loop point must be less than length), and those are computed in the NesEnvelope class.
-  // Therefore, the UI must update NesEnvelope, then immediately read the state back out after the
+  // Therefore the UI updates NesEnvelope, then immediately reads the state back out after the
   // constraints are enforced.
   //
-  // I did not want the UI to know about the constraints between the parameters.
+  // I did not want the UI to know about the constraints between the parameters, but that might be
+  // the wrong approach. It might be better to have the UI know about the constraints, and propagate
+  // updates through the param system.
   //
   // This func is also invoked when a preset is loaded, because the NesChannels are updated directly
   // during preset deserialization rather than being updated through the param system (I think).
@@ -159,4 +165,22 @@ private:
   json SerializeJson() const;
 
   void DeserializeJson(json &j);
+
+};
+
+class LoudNESPanelControl : public IPanelControl {
+public:
+  void OnDrop(const char *data) override {
+    dynamic_cast<LoudNES *>(GetDelegate())->HandleDrop(data);
+  }
+
+  void OnMouseDown(float x, float y, const IMouseMod &mod) override {
+    printf("LoudNESPanelControl onMouseDOwn");
+    IControl::OnMouseDown(x, y, mod);
+  }
+
+public:
+  LoudNESPanelControl(IRECT irect, IPattern pattern) : IPanelControl(irect, pattern) {
+    mIgnoreMouse = false;
+  }
 };

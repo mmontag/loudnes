@@ -260,12 +260,12 @@ public:
 
     // Patch list
     IRECT box = mRECT.GetReducedFromBottom(136.f).GetReducedFromRight(128.f).GetReducedFromTop(mTopMargin);
-    IRECT glossBox = box.GetPadded(-2.f).FracRectVertical(0.5f, true);
-    IPattern gloss = IPattern::CreateLinearGradient(glossBox, EDirection::Vertical,
-                                                    {
-                                                      IColorStop(COLOR_WHITE.WithOpacity(0.26f), 0.f),
-                                                      IColorStop(COLOR_WHITE.WithOpacity(0.12f), 0.65f)
-                                                    });
+//    IRECT glossBox = box.GetPadded(-2.f).FracRectVertical(0.5f, true);
+//    IPattern gloss = IPattern::CreateLinearGradient(glossBox, EDirection::Vertical,
+//                                                    {
+//                                                      IColorStop(COLOR_WHITE.WithOpacity(0.26f), 0.f),
+//                                                      IColorStop(COLOR_WHITE.WithOpacity(0.12f), 0.65f)
+//                                                    });
     g.FillRoundRect(kBlack, box, 3.f);
 
     box.Pad(-2.f);
@@ -281,8 +281,8 @@ public:
       g.FillRect(kBlack, blackKeyBox.GetTranslated(0.f, rowHeight * i));
     }
 
-    g.PathRect(glossBox);
-    g.PathFill(gloss);
+//    g.PathRect(glossBox);
+//    g.PathFill(gloss);
 
 
   }

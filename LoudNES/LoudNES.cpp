@@ -139,13 +139,10 @@ LoudNES::LoudNES(const InstanceInfo& info)
     pGraphics->EnableTooltips(true);
 
     IRECT b = pGraphics->GetBounds();
-    pGraphics->AttachControl(
-      new IPanelControl(b, IPattern::CreateLinearGradient(0, 0, b.W(), b.H(),
-                                                          {
-                                                            IColorStop(IColor::FromColorCodeStr("#C0C0C0"), 0),
-                                                            IColorStop(IColor::FromColorCodeStr("#828282"), 1)
-                                                          }))
-    );
+    const IPattern &pattern = IPattern::CreateLinearGradient(0, 0, b.W(), b.H(),
+                                                             {IColorStop(IColor::FromColorCodeStr("#C0C0C0"), 0),
+                                                              IColorStop(IColor::FromColorCodeStr("#828282"), 1)});
+    pGraphics->AttachControl(new LoudNESPanelControl(b, pattern));
     b = pGraphics->GetBounds().GetPadded(-PLUG_PADDING);
 
 #pragma mark - Keyboard
@@ -170,6 +167,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
 
     auto handleChannelSwitch = [this](IControl *pCaller) {
       const int ch = dynamic_cast<ChannelSwitchControl *>(pCaller)->GetSelectedIdx();
+      mCurChannelIdx = ch;
       bool isDpcm = ch == NesApu::Channel::Dpcm;
       GetUI()->GetControlWithTag(kCtrlTagDpcmEditor)->Hide(!isDpcm);
       GetUI()->ForControlInGroup("StepSequencers", [=](IControl *control) {
@@ -190,7 +188,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
       }
 
       mDSP.SetActiveChannel(NesApu::Channel(ch));
-      UpdateStepSequencers();
+      UpdateStepSequencers(ch);
       SendCurrentParamValuesFromDelegate();
     };
 
@@ -311,10 +309,12 @@ LoudNES::LoudNES(const InstanceInfo& info)
 
     const IRECT editorPanel = b.GetReducedFromLeft(136);
 
+    // Creates a step sequencer and 4 knobs (loop, release, length, speed).
     auto createEnvelopePanel = [=](IRECT rect, const char* label, float minVal, float maxVal, int envIdx, int baseParam, int ctrlTag, IColor color) {
 
       auto stepSeq = new StepSequencer(rect.GetReducedFromBottom(kKnobHeight + 16.f),
                                        label,
+                                       baseParam,
                                        style.WithColor(kFG, color).WithColor(kBG, IColor::FromColorCodeStr("#141414")),
                                        64,
                                        1.f/float(maxVal - minVal),
@@ -334,8 +334,37 @@ LoudNES::LoudNES(const InstanceInfo& info)
       // Loop
       auto lpC = new KnobControl(knobBox.SubRectHorizontal(4, 0), loopParam, "Loop", knobStyle, false, false);
       lpC->SetActionFunction([=](IControl *pCaller) {
-        UpdateStepSequencerAndParamsFromEnv(envIdx, mDSP.mNesEnvs[envIdx], stepSeq);
+        auto value = pCaller->GetParam()->Int();
+//        NesEnvelope* env = mDSP.mNesEnvs[envIdx];
+//        stepSeq->SetLoopPoint(value);
+        // Resolve the param for the currently selected channel through the control tag
+        int paramEnvLoopPoint = GetUI()->GetControlWithTag(kCtrlTagEnv1LoopPoint + envIdx * 4)->GetParamIdx(0);
+        auto releasePoint = GetParam(paramEnvLoopPoint + 1);
+        auto length = GetParam(paramEnvLoopPoint + 2);
+        if (releasePoint->Int() <= value) releasePoint->Set(value + 1);
+        if (length->Int() <= value) length->Set(value + 1);
+//          SetParameterValue(loopParam + 1, value + 1.0);
+//          SetParameterValue(loopParam + 2, value + 1.0);
+        // It is not necessary to update StepSequencer loop point/release/etc. because they are linked to params
         SendCurrentParamValuesFromDelegate();
+
+
+//        int paramEnvLoopPoint = GetUI()->GetControlWithTag(kCtrlTagEnv1LoopPoint + envIdx * 4)->GetParamIdx(0);
+//        NesEnvelope* env = mDSP.mNesEnvs[envIdx];
+//        auto seq = stepSeq;
+//        SetParameterValue(paramEnvLoopPoint, pCaller->GetParam()->Int())
+//        // Update params
+//        GetParam(paramEnvLoopPoint + 0)->Set(env->mLoopPoint);
+//        GetParam(paramEnvLoopPoint + 1)->Set(env->mReleasePoint);
+//        GetParam(paramEnvLoopPoint + 2)->Set(env->mLength);
+//
+//        // Update Step Sequencer
+//        seq->SetLoopPoint(env->mLoopPoint);
+//        seq->SetReleasePoint(env->mReleasePoint);
+//        seq->SetLength(env->mLength);
+//
+//        UpdateStepSequencerAndParamsFromEnv(envIdx, mDSP.mNesEnvs[envIdx], stepSeq);
+//        SendCurrentParamValuesFromDelegate();
       });
       pGraphics->AttachControl(lpC, kCtrlTagEnv1LoopPoint + envIdx * 4, "Knobs");
 
@@ -365,6 +394,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
 
     IRECT envPanel = editorPanel.GetPadded(8);
     // TODO: check if the baseParam argument is correct for these
+    // The baseParam argument is only valid for channel 0 (Pulse 1).
     createEnvelopePanel(envPanel.GetGridCell(0, 2, 2).GetPadded(-8), "VOLUME", 0, 15, 0,
                         ParamFromCh(0, kParamEnv1LoopPoint), kCtrlTagEnvelope1, IColor::FromColorCodeStr("#CC2626"));
     createEnvelopePanel(envPanel.GetGridCell(1, 2, 2).GetPadded(-8), "DUTY", 0, 7, 1,
@@ -374,7 +404,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
     createEnvelopePanel(envPanel.GetGridCell(3, 2, 2).GetPadded(-8), "FINE PITCH", -12, 12, 3,
                         ParamFromCh(0, kParamEnv4LoopPoint), kCtrlTagEnvelope4, IColor::FromColorCodeStr("#747ACD"));
 
-    UpdateStepSequencers();
+    UpdateStepSequencers(mCurChannelIdx);
 
 #pragma mark - DPCM Editor
 
@@ -388,7 +418,7 @@ LoudNES::LoudNES(const InstanceInfo& info)
 
 void LoudNES::OnPresetsModified() {
   printf("-- Presets modified\n");
-  UpdateStepSequencers();
+  UpdateStepSequencers(mCurChannelIdx);
   GetUI()->ForControlInGroup("DpcmEditor", [](IControl *control) { control->SetDirty(false); });
 
   iplug::IPluginBase::OnPresetsModified();
@@ -413,7 +443,7 @@ struct SeqGroup {
   int seqCtrlTag;
 };
 
-void LoudNES::UpdateStepSequencers() {
+void LoudNES::UpdateStepSequencers(int activeChannel) {
   // Update all envelope values
   for (auto seqGroup : vector<SeqGroup>{{0, kCtrlTagEnvelope1},
                                         {1, kCtrlTagEnvelope2},
@@ -422,13 +452,20 @@ void LoudNES::UpdateStepSequencers() {
     auto seq = dynamic_cast<StepSequencer *>(GetUI()->GetControlWithTag(seqGroup.seqCtrlTag));
     auto nesEnv = mDSP.mNesEnvs[seqGroup.idx];
 
-    // Convert NesEnvelope step value to StepSequencer step value (normalized)
+    // [nesEnv -> sliders] Convert NesEnvelope step value to StepSequencer step value (normalized)
     for (int i = 0; i < 64; i++) {
-      seq->SetValue(float(nesEnv->mValues[i] - nesEnv->mMinVal) / float(nesEnv->mMaxVal - nesEnv->mMinVal), i);
+      seq->SetSliderValue(float(nesEnv->mValues[i] - nesEnv->mMinVal) / float(nesEnv->mMaxVal - nesEnv->mMinVal), i);
     }
 
-    UpdateStepSequencerAndParamsFromEnv(seqGroup.idx, nesEnv, seq);
+    // Rebind the current channel's envelope params to the StepSequencer
+    int lowParamIdx = ParamFromCh(activeChannel, kParamEnv1LoopPoint + 4 * seqGroup.idx);
+    for (int i = 0; i < kNumStepParams; i++) {
+      seq->SetParamIdx(lowParamIdx + i, i);
+    }
 
+//    UpdateStepSequencerAndParamsFromEnv(seqGroup.idx, nesEnv, seq);
+
+    // [sliders -> nesEnv] Rebind the slider values to the current channel's NES envelope
     seq->SetActionFunc([nesEnv](int stepIdx, float value) {
       nesEnv->mValues[stepIdx] = round(iplug::Lerp((float)nesEnv->mMinVal, (float)nesEnv->mMaxVal, value));
     });
@@ -568,6 +605,10 @@ void LoudNES::DeserializeJson(json &j) {
   }
   OnParamReset(kPresetRecall);
   LEAVE_PARAMS_MUTEX
+}
+
+void LoudNES::HandleDrop(const char *data) {
+  printf("dropped: [\n%s\n]", data);
 }
 
 bool LoudNES::OnMessage(int msgTag, int ctrlTag, int dataSize, const void* pData)

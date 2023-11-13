@@ -15,6 +15,8 @@
 
 using StepSeqFunc = std::function<void(int stepIdx, float value)>;
 
+constexpr int kNumStepParams = 4; // Four step sequencer parameters: loop, length, release, speed
+
 /** A base class for mult-strip/slider controls, such as multi-sliders, meters */
 class StepSequencer : public IControl, public IVectorBase {
 public:
@@ -28,22 +30,30 @@ public:
    * @param direction The direction of the sliders
    * @param minSliderValue Defines the minimum value of each slider
    * @param maxSliderValue Defines the maximum value of each slider */
-  StepSequencer(const IRECT &bounds, const char *label, const IVStyle &style = DEFAULT_STYLE, int maxNSliders = 1,
+  StepSequencer(const IRECT &bounds, const char *label, int lowParamIdx,
+                const IVStyle &style = DEFAULT_STYLE, int maxNSliders = 1,
                 float grain = 1.f, StepSeqFunc aF = nullptr)
   : IControl(bounds)
   , IVectorBase(style)
   , mActionFunc(std::move(aF))
   , mGrain(grain)
-  , mLength(maxNSliders)
+  , mNumSliders(maxNSliders)
   {
     mSliderPadding = 1.f;
 
-    SetNVals(maxNSliders);
+    // Sliders use mNumSliders and mSliderVals, NOT NVals() and mVals[]
+    // the latter is the number of parameters, which is always kNumStepParams
+    SetNVals(kNumStepParams + mNumSliders);
+    for (int i = 0; i < kNumStepParams; i++) {
+      SetParamIdx(lowParamIdx + i, i);
+    }
 
-    for (int i = 0; i < maxNSliders; i++)
+//    mSliderVals.resize(mNumSliders);
+    for (int i = 0; i < mNumSliders; i++)
     {
 //      SetParamIdx(lowParamIdx + i, i); // or kNoParameter
       mSliderBounds.Add(IRECT());
+//      mSliderVals[i] = 0.;
     }
 
     AttachIControl(this, label);
@@ -73,13 +83,13 @@ public:
 
   int GetValIdxForPos(float x, float y) const override
   {
-    int nVals = NVals();
+    int nVals = mNumSliders; // used to be NVals()
 
     for (auto v = 0; v < nVals; v++)
     {
       if (mSliderBounds.Get()[v].Contains(x, y))
       {
-        return v;
+        return v + kNumStepParams;
       }
     }
 
@@ -88,17 +98,17 @@ public:
 
   virtual void MakeSliderRects(const IRECT& bounds)
   {
-    int nVals = NVals();
+    int nVals = mNumSliders;
     int dir = static_cast<int>(mDirection); // 0 = horizontal, 1 = vertical
     for (int ch = 0; ch < nVals; ch++)
     {
-      mSliderBounds.Get()[ch] = bounds.SubRect(EDirection(!dir), mLength, ch).
+      mSliderBounds.Get()[ch] = bounds.SubRect(EDirection(!dir), mNumSliders, ch).
                                      GetPadded(0, -mSliderPadding * (float) dir, -mSliderPadding * (float) !dir, 0);
     }
   }
 
   void SetLength(int length) {
-    mLength = max(1, length);
+    mNumSliders = max(1, length);
     MakeSliderRects(mInsetBounds);
     SetSlidersDirty();
     SetDirty(false);
@@ -125,6 +135,11 @@ public:
 //    if (ctr % 10 == 0)
 //      DBGMSG("Drawing StepSequencer %d\n", ctr);
 //    ctr++;
+    // TODO: index 2 is bound to the length parameter
+    // TODO: is this the right place to check for changes to the length parameter?
+    if (mNumSliders != GetParam(2)->Int()) {
+      SetLength(GetParam(2)->Int());
+    }
 
     if (!g.CheckLayer(mLayerGrid)) {
       g.StartLayer(this, mInsetBounds);
@@ -144,7 +159,7 @@ public:
       g.StartLayer(this, mInsetBounds);
 
       // Draw sliders
-      for (int ch = 0; ch < mLength; ch++) {
+      for (int ch = 0; ch < mNumSliders; ch++) {
         DrawSlider(g, mSliderBounds.Get()[ch], ch);
       }
 
@@ -165,14 +180,14 @@ public:
     g.DrawBitmap(mLayerSliders->GetBitmap(), mInsetBounds);
 
     g.FillRect(COLOR_WHITE.WithOpacity(0.1), mLoopInfoBounds);
-    IRECT loopRect = mLoopInfoBounds.GetFromRight((mLength - mLoopPoint   ) * mLoopInfoBounds.W() / mLength);
-    IRECT relsRect = mLoopInfoBounds.GetFromRight((mLength - mReleasePoint) * mLoopInfoBounds.W() / mLength);
+    IRECT loopRect = mLoopInfoBounds.GetFromRight((mNumSliders - GetParam(0)->Int()) * mLoopInfoBounds.W() / mNumSliders);
+    IRECT relsRect = mLoopInfoBounds.GetFromRight((mNumSliders - GetParam(1)->Int()) * mLoopInfoBounds.W() / mNumSliders);
     IColor c1 = GetColor(kFG);
     IColor c2 = IColor::LinearInterpolateBetween(c1, COLOR_BLACK, 0.33);
     g.FillRect(c1, loopRect, &mBlend);
     g.FillRect(c2, relsRect, &mBlend);
 
-    if (mHighlightIdx >= 0 && mHighlightIdx < mLength) {
+    if (mHighlightIdx >= 0 && mHighlightIdx < mNumSliders) {
       IRECT r = mSliderBounds.Get()[mHighlightIdx];
       g.FillRect(COLOR_WHITE, r, &BLEND_25);
     }
@@ -201,7 +216,7 @@ public:
   void SnapToMouse(float x, float y, EDirection direction, const IRECT& bounds, int valIdx = -1 /* TODO:: not used*/, double minClip = 0., double maxClip = 1.) override
   {
     bounds.Constrain(x, y);
-    int nVals = NVals();
+    int nVals = mNumSliders; // NVals();
 
     float value = 0.;
     int sliderTest = -1;
@@ -232,11 +247,11 @@ public:
     {
       mSliderHit = sliderTest;
 
-      float oldValue = GetValue(sliderTest);
+      float oldValue = GetSliderValue(sliderTest);
       float newValue = Clip(value, 0.f, 1.f);
       if (newValue != oldValue) {
         mLayerSliders->Invalidate();
-        SetValue(newValue, sliderTest);
+        SetSliderValue(newValue, sliderTest);
         OnNewValue(sliderTest, newValue);
         SetDirty(false);
       }
@@ -262,11 +277,11 @@ public:
           {
             double frac = (double)(i - lowBounds) / double(highBounds-lowBounds);
 
-            float oldValue = GetValue(i);
-            float newValue = std::ceil(iplug::Lerp(GetValue(lowBounds), GetValue(highBounds), frac) / mGrain) * mGrain;
+            double oldValue = GetSliderValue(i);
+            double newValue = std::ceil(iplug::Lerp(GetSliderValue(lowBounds), GetSliderValue(highBounds), frac) / mGrain) * mGrain;
             if (newValue != oldValue) {
               mLayerSliders->Invalidate();
-              SetValue(newValue, i);
+              SetSliderValue(newValue, i);
               OnNewValue(i, newValue);
               SetDirty(false);
             }
@@ -279,6 +294,14 @@ public:
     {
       mSliderHit = -1;
     }
+  }
+  
+  void SetSliderValue(double value, int sliderIdx) {
+    SetValue(value, sliderIdx + kNumStepParams);
+  }
+  
+  double GetSliderValue(int sliderIdx) {
+    return GetValue(sliderIdx + kNumStepParams);
   }
 
   void OnMouseDown(float x, float y, const IMouseMod& mod) override
@@ -303,7 +326,7 @@ public:
 
   virtual void DrawSlider(IGraphics& g, const IRECT& r, int chIdx)
   {
-    IRECT fillRect = r.FracRect(mDirection, static_cast<float>(GetValue(chIdx)));
+    IRECT fillRect = r.FracRect(mDirection, static_cast<float>(GetSliderValue(chIdx)));
     g.FillRect(GetColor(kFG), fillRect, &mBlend);
   }
 
@@ -328,7 +351,7 @@ protected:
   int mHighlightIdx = -1;
   int mLoopPoint = 0;
   int mReleasePoint = 0;
-  int mLength = 1;
+  int mNumSliders = 1;
   StepSeqFunc mActionFunc;
 protected:
   ILayerPtr mLayerGrid;
