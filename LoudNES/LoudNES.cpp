@@ -331,47 +331,39 @@ LoudNES::LoudNES(const InstanceInfo& info)
       int lenParam  = baseParam + 2;
       int spdParam  = baseParam + 3;
 
+      /**
+       * In the action functions below, we avoid talking to NES env directly because we want to
+       * maintain a uni-directional data flow, and the constraints need to be reflected in the UI.
+       * The old method:
+       * UpdateStepSequencerAndParamsFromEnv(envIdx, mDSP.mNesEnvs[envIdx], stepSeq);
+       */
       // Loop
       auto lpC = new KnobControl(knobBox.SubRectHorizontal(4, 0), loopParam, "Loop", knobStyle, false, false);
       lpC->SetActionFunction([=](IControl *pCaller) {
         auto value = pCaller->GetParam()->Int();
-//        NesEnvelope* env = mDSP.mNesEnvs[envIdx];
-//        stepSeq->SetLoopPoint(value);
         // Resolve the param for the currently selected channel through the control tag
         int paramEnvLoopPoint = GetUI()->GetControlWithTag(kCtrlTagEnv1LoopPoint + envIdx * 4)->GetParamIdx(0);
         auto releasePoint = GetParam(paramEnvLoopPoint + 1);
         auto length = GetParam(paramEnvLoopPoint + 2);
+        // Apply constraints
         if (releasePoint->Int() <= value) releasePoint->Set(value + 1);
         if (length->Int() <= value) length->Set(value + 1);
-//          SetParameterValue(loopParam + 1, value + 1.0);
-//          SetParameterValue(loopParam + 2, value + 1.0);
         // It is not necessary to update StepSequencer loop point/release/etc. because they are linked to params
         SendCurrentParamValuesFromDelegate();
-
-
-//        int paramEnvLoopPoint = GetUI()->GetControlWithTag(kCtrlTagEnv1LoopPoint + envIdx * 4)->GetParamIdx(0);
-//        NesEnvelope* env = mDSP.mNesEnvs[envIdx];
-//        auto seq = stepSeq;
-//        SetParameterValue(paramEnvLoopPoint, pCaller->GetParam()->Int())
-//        // Update params
-//        GetParam(paramEnvLoopPoint + 0)->Set(env->mLoopPoint);
-//        GetParam(paramEnvLoopPoint + 1)->Set(env->mReleasePoint);
-//        GetParam(paramEnvLoopPoint + 2)->Set(env->mLength);
-//
-//        // Update Step Sequencer
-//        seq->SetLoopPoint(env->mLoopPoint);
-//        seq->SetReleasePoint(env->mReleasePoint);
-//        seq->SetLength(env->mLength);
-//
-//        UpdateStepSequencerAndParamsFromEnv(envIdx, mDSP.mNesEnvs[envIdx], stepSeq);
-//        SendCurrentParamValuesFromDelegate();
       });
       pGraphics->AttachControl(lpC, kCtrlTagEnv1LoopPoint + envIdx * 4, "Knobs");
 
       // Release
       auto rpC = new KnobControl(knobBox.SubRectHorizontal(4, 1), relParam, "Release", knobStyle, false, false);
       rpC->SetActionFunction([=](IControl *pCaller) {
-        UpdateStepSequencerAndParamsFromEnv(envIdx, mDSP.mNesEnvs[envIdx], stepSeq);
+        auto value = pCaller->GetParam()->Int();
+        // Resolve the param for the currently selected channel through the control tag
+        int paramEnvLoopPoint = GetUI()->GetControlWithTag(kCtrlTagEnv1LoopPoint + envIdx * 4)->GetParamIdx(0);
+        auto loopPoint = GetParam(paramEnvLoopPoint);
+        auto length = GetParam(paramEnvLoopPoint + 2);
+        // Apply constraints
+        if (loopPoint->Int() >= value) loopPoint->Set(value - 1);
+        if (length->Int() <= value) length->Set(value + 1);
         SendCurrentParamValuesFromDelegate();
       });
       pGraphics->AttachControl(rpC, kCtrlTagEnv1RelPoint + envIdx * 4, "Knobs");
@@ -379,7 +371,14 @@ LoudNES::LoudNES(const InstanceInfo& info)
       // Length
       auto lC = new KnobControl(knobBox.SubRectHorizontal(4, 2), lenParam, "Length", knobStyle, false, false);
       lC->SetActionFunction([=](IControl *pCaller) {
-        UpdateStepSequencerAndParamsFromEnv(envIdx, mDSP.mNesEnvs[envIdx], stepSeq);
+        auto value = pCaller->GetParam()->Int();
+        // Resolve the param for the currently selected channel through the control tag
+        int paramEnvLoopPoint = GetUI()->GetControlWithTag(kCtrlTagEnv1LoopPoint + envIdx * 4)->GetParamIdx(0);
+        auto loopPoint = GetParam(paramEnvLoopPoint);
+        auto releasePoint = GetParam(paramEnvLoopPoint + 1);
+        // Apply constraints
+        if (loopPoint->Int() >= value) loopPoint->Set(value - 1);
+        if (releasePoint->Int() >= value) releasePoint->Set(value - 1);
         SendCurrentParamValuesFromDelegate();
       });
       pGraphics->AttachControl(lC, kCtrlTagEnv1Length + envIdx * 4, "Knobs");
